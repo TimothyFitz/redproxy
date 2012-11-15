@@ -1,26 +1,37 @@
-package main
+package redproxy
 
 import (
     "fmt"
     "flag"
     "net"
-    "io"
+    //"io"
+    "github.com/garyburd/redigo/redis"
 )
 
-func handleWrite(local *net.TCPConn, remote *net.TCPConn) {
-    io.Copy(local, remote)
+type FrontendConn struct {
+    *net.TCPConn
+}
+
+type BackendConn struct {
+    redis.Conn
+}
+
+func handleWrite(local FrontendConn, remote BackendConn) {
+    // Handle Frontend to Backend communication
+    //io.Copy(local, remote)
     fmt.Println("io.Copy(local, remote) finished.")
     local.Close()
 }
 
-func handleRead(local *net.TCPConn, remote *net.TCPConn) {
-    io.Copy(remote, local)
+func handleRead(local FrontendConn, remote BackendConn) {
+    // Handle Backend to Frontend communication
+    //io.Copy(remote, local)
     fmt.Println("io.Copy(remote, local) finished.")
     remote.Close()
 }
 
 func handleConn(local *net.TCPConn) {
-    remote, err := net.Dial("tcp", *remote_addr)
+    remote, err := redis.Dial("tcp", *remote_addr)
 
     fmt.Println("New connection")
 
@@ -29,8 +40,12 @@ func handleConn(local *net.TCPConn) {
 
         return
     }
-    go handleWrite(local, remote.(*net.TCPConn))
-    go handleRead(local, remote.(*net.TCPConn))
+
+    fe_conn := FrontendConn{local}
+    be_conn := BackendConn{remote}
+
+    go handleWrite(fe_conn, be_conn)
+    go handleRead(fe_conn, be_conn)
 }
 
 var port_str *string = flag.String("p", "9999", "local port")
