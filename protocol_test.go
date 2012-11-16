@@ -15,9 +15,9 @@ var expected_values = []expected_value{
         MultiBulkReply{
             BulkReply([]byte("SET")), 
             BulkReply([]byte("foo")), 
-            BulkReply([]byte("bar")),
+            BulkReply([]byte("barbar")),
         },
-        []byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$3\r\nbar\r\n"),
+        []byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$6\r\nbarbar\r\n"),
     },
 }
 
@@ -64,3 +64,14 @@ func TestInequality(t *testing.T) {
     }
 }
 
+func TestDecodingKnownGoodValues(t *testing.T) {
+    for _, ev := range expected_values {
+        value, err := Read(bytes.NewBuffer(ev.encoded))
+        if err != nil {
+            t.Fatalf("Unexpected error %#v", err)
+        }
+        if !Equal(value, ev.decoded) {
+            t.Fatalf("Expected %#v, got %#v", ev.decoded, value)
+        }
+    }
+}
