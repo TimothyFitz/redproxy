@@ -1,8 +1,8 @@
 package redproxy
 
 import (
-    "fmt"
     "flag"
+    "fmt"
     "net"
     //"io"
     "github.com/garyburd/redigo/redis"
@@ -51,17 +51,20 @@ func handleConn(local *net.TCPConn) {
 var port_str *string = flag.String("p", "9999", "local port")
 var remote_addr *string = flag.String("r", "localhost:6379", "remote address")
 
-
 func main() {
     flag.Parse()
 
     fmt.Printf("Listening on port %v\nProxying: %v\n\n", *port_str, *remote_addr)
 
-    addr, err := net.ResolveTCPAddr("tcp", "localhost:" + *port_str)
-    if err != nil { panic(err) }
+    addr, err := net.ResolveTCPAddr("tcp", "localhost:"+*port_str)
+    if err != nil {
+        panic(err)
+    }
 
     listener, err := net.ListenTCP("tcp", addr)
-    if err != nil { panic(err) }
+    if err != nil {
+        panic(err)
+    }
 
     for {
         conn, err := listener.AcceptTCP()

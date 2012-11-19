@@ -13,8 +13,8 @@ type expected_value struct {
 var expected_values = []expected_value{
     {
         MultiBulkReply{
-            BulkReply([]byte("SET")), 
-            BulkReply([]byte("foo")), 
+            BulkReply([]byte("SET")),
+            BulkReply([]byte("foo")),
             BulkReply([]byte("barbar")),
         },
         []byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$6\r\nbarbar\r\n"),
@@ -49,7 +49,7 @@ type inequality struct {
     rhs interface{}
 }
 
-var inequalities = []inequality {
+var inequalities = []inequality{
     {
         BulkReply([]byte("foo")),
         BulkReply([]byte("bar")),

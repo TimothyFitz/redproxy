@@ -1,11 +1,11 @@
 package redproxy
 
 import (
+    "bufio"
+    "bytes"
     "fmt"
     "io"
     "strconv"
-    "bytes"
-    "bufio"
 )
 
 type MultiBulkReply []BulkReply
@@ -16,11 +16,10 @@ type Integer int64
 
 const (
     charMultiBulkReply = '*'
-    charBulkReply = '$'
+    charBulkReply      = '$'
 )
 
 var crlf = []byte("\r\n")
-
 
 func itob(i int) []byte {
     return []byte(strconv.Itoa(i))
@@ -38,7 +37,9 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
     switch lhs := i_lhs.(type) {
     case MultiBulkReply:
         rhs, ok := i_rhs.(MultiBulkReply)
-        if !ok { panic_type(i_rhs) }
+        if !ok {
+            panic_type(i_rhs)
+        }
         for i := range lhs {
             if !Equal(lhs[i], rhs[i]) {
                 return false
@@ -47,7 +48,9 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
         return true
     case BulkReply:
         rhs, ok := i_rhs.(BulkReply)
-        if !ok { panic_type(i_rhs) }
+        if !ok {
+            panic_type(i_rhs)
+        }
         return bytes.Equal(lhs, rhs)
     default:
         panic_type(i_lhs)
@@ -111,8 +114,7 @@ func read(in *bufio.Reader) (interface{}, error) {
     }
 
     msg_type := header[0]
-    msg_body := header[1:len(header)-2]
-
+    msg_body := header[1 : len(header)-2]
 
     switch msg_type {
     case charBulkReply:
@@ -163,4 +165,3 @@ func Read(in io.Reader) (v interface{}, err error) {
     v, err = read(bufio.NewReader(in))
     return
 }
-
