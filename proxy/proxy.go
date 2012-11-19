@@ -1,11 +1,10 @@
-package redproxy
+package main
 
 import (
     "flag"
     "fmt"
     "net"
-    //"io"
-    "github.com/garyburd/redigo/redis"
+    "github.com/timothyfitz/redproxy"
 )
 
 type FrontendConn struct {
@@ -13,12 +12,25 @@ type FrontendConn struct {
 }
 
 type BackendConn struct {
-    redis.Conn
+    *net.TCPConn
 }
+
+func copyRedis(from *net.TCPConn, to *net.TCPConn) error {
+    for {
+        v, err := redproxy.Read(from)
+        if err != nil {
+            return err
+        }
+        redproxy.Write(v, to)
+    }
+    return nil
+}
+
 
 func handleWrite(local FrontendConn, remote BackendConn) {
     // Handle Frontend to Backend communication
     //io.Copy(local, remote)
+    copyRedis(local.TCPConn, remote.TCPConn)
     fmt.Println("io.Copy(local, remote) finished.")
     local.Close()
 }
@@ -26,12 +38,13 @@ func handleWrite(local FrontendConn, remote BackendConn) {
 func handleRead(local FrontendConn, remote BackendConn) {
     // Handle Backend to Frontend communication
     //io.Copy(remote, local)
+    copyRedis(remote.TCPConn, local.TCPConn)
     fmt.Println("io.Copy(remote, local) finished.")
     remote.Close()
 }
 
 func handleConn(local *net.TCPConn) {
-    remote, err := redis.Dial("tcp", *remote_addr)
+    remote, err := net.Dial("tcp", *remote_addr)
 
     fmt.Println("New connection")
 
@@ -42,7 +55,7 @@ func handleConn(local *net.TCPConn) {
     }
 
     fe_conn := FrontendConn{local}
-    be_conn := BackendConn{remote}
+    be_conn := BackendConn{remote.(*net.TCPConn)}
 
     go handleWrite(fe_conn, be_conn)
     go handleRead(fe_conn, be_conn)
