@@ -23,6 +23,10 @@ var expected_values = []expected_value{
         SingleLine([]byte("OK")),
         []byte("+OK\r\n"),
     },
+    {
+        nil,
+        []byte("$-1\r\n"),
+    },
 }
 
 func encode(iv interface{}) []byte {

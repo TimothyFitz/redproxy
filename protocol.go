@@ -31,15 +31,11 @@ func panic_type(v interface{}) {
 }
 
 func Equal(i_lhs interface{}, i_rhs interface{}) bool {
-    if i_lhs == nil || i_rhs == nil {
-        return false
-    }
-
     switch lhs := i_lhs.(type) {
     case MultiBulkData:
         rhs, ok := i_rhs.(MultiBulkData)
         if !ok {
-            panic_type(i_rhs)
+            return false
         }
         for i := range lhs {
             if !Equal(lhs[i], rhs[i]) {
@@ -50,15 +46,17 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
     case BulkData:
         rhs, ok := i_rhs.(BulkData)
         if !ok {
-            panic_type(i_rhs)
+            return false
         }
         return bytes.Equal(lhs, rhs)
     case SingleLine:
         rhs, ok := i_rhs.(SingleLine)
         if !ok {
-            panic_type(i_rhs)
+            return false
         }
         return bytes.Equal(lhs, rhs)
+    case nil:
+        return i_rhs == nil
     default:
         panic_type(i_lhs)
     }
@@ -84,6 +82,8 @@ func Write(iv interface{}, out io.Writer) {
         out.Write([]byte{charSingleLine})
         out.Write(v)
         out.Write(crlf)
+    case nil:
+        out.Write([]byte("$-1\r\n"))
     default:
         panic_type(iv)
     }
@@ -134,6 +134,10 @@ func read(in *bufio.Reader) (interface{}, error) {
         length, err := strconv.Atoi(string(msg_body))
         if err != nil {
             return nil, err
+        }
+
+        if length < 0 {
+            return nil, nil
         }
 
         data := make([]byte, length)
