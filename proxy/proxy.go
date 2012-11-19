@@ -38,7 +38,7 @@ func handleWrite(local FrontendConn, remote BackendConn) {
     err := copyRedis(local.TCPConn, remote.TCPConn)
     fmt.Println("io.Copy(local, remote) finished.")
     if err != nil {
-        fmt.Println("Unclean finish", err)
+        fmt.Println("Unclean finish:", err)
     }
     local.Close()
 }
@@ -48,7 +48,7 @@ func handleRead(local FrontendConn, remote BackendConn) {
     err := copyRedis(remote.TCPConn, local.TCPConn)
     fmt.Println("io.Copy(remote, local) finished.")
     if err != nil {
-        fmt.Println("Unclean finish", err)
+        fmt.Println("Unclean finish:", err)
     }
     remote.Close()
 }

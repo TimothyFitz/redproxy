@@ -58,6 +58,21 @@ class TestProxy(unittest.TestCase):
     def test_get_returns_none_if_no_value_set(self):
         self.assertIsNone(self.client.get("not_found"))
 
+    def test_ping(self):
+        self.assertTrue(self.client.ping())
+
+    def test_set(self):
+        self.assertTrue(self.client.set("foo", "bar"))
+
+    def test_set_and_get(self):
+        self.client.set("timothy", "fitz")
+        self.assertEqual("fitz", self.client.get("timothy"))
+
+    def test_error_response(self):
+        self.client.set("foo", "bar")
+        with self.assertRaisesRegexp(redis.exceptions.ResponseError, "Operation against a key holding the wrong kind of value"):
+            self.client.rpop("foo")
+
 def wait_for_true(fun, comment=None):
     start = time.time()
     while time.time() - start < 3:
