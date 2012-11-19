@@ -35,17 +35,21 @@ func copyRedis(from *net.TCPConn, to *net.TCPConn) error {
 
 func handleWrite(local FrontendConn, remote BackendConn) {
     // Handle Frontend to Backend communication
-    //io.Copy(local, remote)
-    copyRedis(local.TCPConn, remote.TCPConn)
+    err := copyRedis(local.TCPConn, remote.TCPConn)
     fmt.Println("io.Copy(local, remote) finished.")
+    if err != nil {
+        fmt.Println("Unclean finish", err)
+    }
     local.Close()
 }
 
 func handleRead(local FrontendConn, remote BackendConn) {
     // Handle Backend to Frontend communication
-    //io.Copy(remote, local)
-    copyRedis(remote.TCPConn, local.TCPConn)
+    err := copyRedis(remote.TCPConn, local.TCPConn)
     fmt.Println("io.Copy(remote, local) finished.")
+    if err != nil {
+        fmt.Println("Unclean finish", err)
+    }
     remote.Close()
 }
 
