@@ -12,13 +12,17 @@ type expected_value struct {
 
 var expected_values = []expected_value{
     {
-        MultiBulkReply{
-            BulkReply([]byte("SET")),
-            BulkReply([]byte("foo")),
-            BulkReply([]byte("barbar")),
+        MultiBulkData{
+            BulkData([]byte("SET")),
+            BulkData([]byte("foo")),
+            BulkData([]byte("barbar")),
         },
         []byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$6\r\nbarbar\r\n"),
     },
+    /*{
+        SingleLine([]byte("OK")),
+        []byte("+OK\r\n"),
+    },*/
 }
 
 func encode(iv interface{}) []byte {
@@ -51,8 +55,8 @@ type inequality struct {
 
 var inequalities = []inequality{
     {
-        BulkReply([]byte("foo")),
-        BulkReply([]byte("bar")),
+        BulkData([]byte("foo")),
+        BulkData([]byte("bar")),
     },
 }
 

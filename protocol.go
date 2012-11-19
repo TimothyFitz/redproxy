@@ -8,15 +8,16 @@ import (
     "strconv"
 )
 
-type MultiBulkReply []BulkReply
-type BulkReply []byte
+type MultiBulkData []BulkData
+type BulkData []byte
 type SingleLine []byte
 type ErrorMessage []byte
 type Integer int64
 
 const (
-    charMultiBulkReply = '*'
-    charBulkReply      = '$'
+    charMultyBulkData = '*'
+    charBulkData      = '$'
+    charSingleLine    = '+'
 )
 
 var crlf = []byte("\r\n")
@@ -35,8 +36,8 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
     }
 
     switch lhs := i_lhs.(type) {
-    case MultiBulkReply:
-        rhs, ok := i_rhs.(MultiBulkReply)
+    case MultiBulkData:
+        rhs, ok := i_rhs.(MultiBulkData)
         if !ok {
             panic_type(i_rhs)
         }
@@ -46,8 +47,8 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
             }
         }
         return true
-    case BulkReply:
-        rhs, ok := i_rhs.(BulkReply)
+    case BulkData:
+        rhs, ok := i_rhs.(BulkData)
         if !ok {
             panic_type(i_rhs)
         }
@@ -60,15 +61,15 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
 
 func Write(iv interface{}, out io.Writer) {
     switch v := iv.(type) {
-    case MultiBulkReply:
-        out.Write([]byte{charMultiBulkReply})
+    case MultiBulkData:
+        out.Write([]byte{charMultyBulkData})
         out.Write(itob(len(v)))
         out.Write(crlf)
         for _, br := range v {
             Write(br, out)
         }
-    case BulkReply:
-        out.Write([]byte{charBulkReply})
+    case BulkData:
+        out.Write([]byte{charBulkData})
         out.Write(itob(len(v)))
         out.Write(crlf)
         out.Write(v)
@@ -117,7 +118,7 @@ func read(in *bufio.Reader) (interface{}, error) {
     msg_body := header[1 : len(header)-2]
 
     switch msg_type {
-    case charBulkReply:
+    case charBulkData:
         length, err := strconv.Atoi(string(msg_body))
         if err != nil {
             return nil, err
@@ -138,19 +139,19 @@ func read(in *bufio.Reader) (interface{}, error) {
             return nil, newProtocolError(fmt.Sprintf("Expected crlf, got: %#v", expected_crlf))
         }
 
-        return BulkReply(data), nil
-    case charMultiBulkReply:
+        return BulkData(data), nil
+    case charMultyBulkData:
         length, err := strconv.Atoi(string(msg_body))
         if err != nil {
             return nil, err
         }
-        mbr := make(MultiBulkReply, length)
+        mbr := make(MultiBulkData, length)
         for i := 0; i < length; i++ {
             v, err := read(in)
             if err != nil {
                 return nil, err
             }
-            br, ok := v.(BulkReply)
+            br, ok := v.(BulkData)
             if !ok {
                 err = newProtocolError(fmt.Sprintf("Unexpected non-bulk reply: %#v", v))
             }
