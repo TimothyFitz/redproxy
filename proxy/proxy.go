@@ -1,11 +1,11 @@
 package main
 
 import (
-    "io"
     "flag"
     "fmt"
-    "net"
     "github.com/timothyfitz/redproxy"
+    "io"
+    "net"
 )
 
 type FrontendConn struct {
@@ -32,7 +32,6 @@ func copyRedis(from *net.TCPConn, to *net.TCPConn) error {
     }
     return nil
 }
-
 
 func handleWrite(local FrontendConn, remote BackendConn) {
     // Handle Frontend to Backend communication
