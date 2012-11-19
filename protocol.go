@@ -181,7 +181,7 @@ func read(in *bufio.Reader) (interface{}, error) {
         copy(sl, msg_body)
         return sl, nil
     }
-    return nil, newProtocolError(fmt.Sprintf("Unknown reply type: %#v", header))
+    return nil, newProtocolError(fmt.Sprintf("Unknown XX reply type: %#v (%#v)", header, string(header)))
 }
 
 func Read(in io.Reader) (v interface{}, err error) {

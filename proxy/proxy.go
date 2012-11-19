@@ -1,6 +1,7 @@
 package main
 
 import (
+    "io"
     "flag"
     "fmt"
     "net"
@@ -18,10 +19,16 @@ type BackendConn struct {
 func copyRedis(from *net.TCPConn, to *net.TCPConn) error {
     for {
         v, err := redproxy.Read(from)
-        if err != nil {
+        if err == io.EOF {
+            to.CloseWrite()
+        } else if err != nil {
             return err
         }
         redproxy.Write(v, to)
+
+        if err == io.EOF {
+            return nil
+        }
     }
     return nil
 }
