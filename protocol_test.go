@@ -19,10 +19,10 @@ var expected_values = []expected_value{
         },
         []byte("*3\r\n$3\r\nSET\r\n$3\r\nfoo\r\n$6\r\nbarbar\r\n"),
     },
-    /*{
+    {
         SingleLine([]byte("OK")),
         []byte("+OK\r\n"),
-    },*/
+    },
 }
 
 func encode(iv interface{}) []byte {

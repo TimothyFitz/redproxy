@@ -53,6 +53,12 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
             panic_type(i_rhs)
         }
         return bytes.Equal(lhs, rhs)
+    case SingleLine:
+        rhs, ok := i_rhs.(SingleLine)
+        if !ok {
+            panic_type(i_rhs)
+        }
+        return bytes.Equal(lhs, rhs)
     default:
         panic_type(i_lhs)
     }
@@ -74,6 +80,12 @@ func Write(iv interface{}, out io.Writer) {
         out.Write(crlf)
         out.Write(v)
         out.Write(crlf)
+    case SingleLine:
+        out.Write([]byte{charSingleLine})
+        out.Write(v)
+        out.Write(crlf)
+    default:
+        panic_type(iv)
     }
 }
 
@@ -140,12 +152,13 @@ func read(in *bufio.Reader) (interface{}, error) {
         }
 
         return BulkData(data), nil
+
     case charMultyBulkData:
         length, err := strconv.Atoi(string(msg_body))
         if err != nil {
             return nil, err
         }
-        mbr := make(MultiBulkData, length)
+        mbd := make(MultiBulkData, length)
         for i := 0; i < length; i++ {
             v, err := read(in)
             if err != nil {
@@ -155,9 +168,14 @@ func read(in *bufio.Reader) (interface{}, error) {
             if !ok {
                 err = newProtocolError(fmt.Sprintf("Unexpected non-bulk reply: %#v", v))
             }
-            mbr[i] = br
+            mbd[i] = br
         }
-        return mbr, nil
+        return mbd, nil
+
+    case charSingleLine:
+        sl := make(SingleLine, len(msg_body))
+        copy(sl, msg_body)
+        return sl, nil
     }
     return nil, newProtocolError(fmt.Sprintf("Unknown reply type: %#v", header))
 }
