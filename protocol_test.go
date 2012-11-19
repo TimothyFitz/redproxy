@@ -31,6 +31,10 @@ var expected_values = []expected_value{
         ErrorMessage([]byte("ERR badness")),
         []byte("-ERR badness\r\n"),
     },
+    {
+        Integer(99),
+        []byte(":99\r\n"),
+    },
 }
 
 func encode(iv interface{}) []byte {

@@ -73,6 +73,10 @@ class TestProxy(unittest.TestCase):
         with self.assertRaisesRegexp(redis.exceptions.ResponseError, "Operation against a key holding the wrong kind of value"):
             self.client.rpop("foo")
 
+    def test_integer_response(self):
+        self.client.set("counter", 0)
+        self.assertEqual(1, self.client.incr("counter"))
+
 def wait_for_true(fun, comment=None):
     start = time.time()
     while time.time() - start < 3:

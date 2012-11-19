@@ -22,6 +22,7 @@ func copyRedis(from *net.TCPConn, to *net.TCPConn) error {
         if err == io.EOF {
             to.CloseWrite()
         } else if err != nil {
+            to.Close()
             return err
         }
         redproxy.Write(v, to)

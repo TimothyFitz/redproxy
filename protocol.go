@@ -19,6 +19,7 @@ const (
     charBulkData      = '$'
     charSingleLine    = '+'
     charErrorMessage  = '-'
+    charInteger       = ':'
 )
 
 var crlf = []byte("\r\n")
@@ -62,6 +63,12 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
             return false
         }
         return bytes.Equal(lhs, rhs)
+    case Integer:
+        rhs, ok := i_rhs.(Integer)
+        if !ok {
+            return false
+        }
+        return lhs == rhs
     case nil:
         return i_rhs == nil
     default:
@@ -94,6 +101,10 @@ func Write(iv interface{}, out io.Writer) {
     case ErrorMessage:
         out.Write([]byte{charErrorMessage})
         out.Write(v)
+        out.Write(crlf)
+    case Integer:
+        out.Write([]byte{charInteger})
+        out.Write(itob(int(v)))
         out.Write(crlf)
     default:
         panic_type(iv)
@@ -197,6 +208,12 @@ func read(in *bufio.Reader) (interface{}, error) {
         copy(em, msg_body)
         return em, nil
 
+    case charInteger:
+        value, err := strconv.Atoi(string(msg_body))
+        if err != nil {
+            return nil, err
+        }
+        return Integer(value), nil
     }
     return nil, newProtocolError(fmt.Sprintf("Unknown reply type: %#v (%#v)", header, string(header)))
 }
