@@ -8,12 +8,8 @@ import redis.client
 import redis.connection
 import redis.exceptions
 
-def unproxied_redis():
-    return redis.client.StrictRedis(port=6379)
 
-def proxied_redis():
-    return redis.client.StrictRedis(port=9999)
-
+from util import proxied_redis, unproxied_redis
 
 class TestLowLevelConnectionBehavior(unittest.TestCase):
     def test_quit_command_causes_connection_to_be_closed(self):
