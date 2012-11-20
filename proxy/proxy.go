@@ -4,7 +4,6 @@ import (
     "flag"
     "fmt"
     "github.com/timothyfitz/redproxy"
-    "io"
     "net"
 )
 
@@ -16,42 +15,51 @@ type BackendConn struct {
     *net.TCPConn
 }
 
-func copyRedis(from *net.TCPConn, to *net.TCPConn) error {
+type Response struct {
+    value *interface{}
+}
+
+type Request struct {
+    promise chan<- Response
+    value   *interface{}
+}
+
+func handleBackend(requests chan Request, remote BackendConn) {
+    promises := make(chan chan<- Response)
+    go handleBackendResponses(promises, remote)
+    for request := range requests {
+        promises <- request.promise
+        redproxy.Write(*request.value, remote.TCPConn)
+    }
+}
+
+func handleBackendResponses(promises chan chan<- Response, remote BackendConn) {
+    for promise := range promises {
+        v, err := redproxy.Read(remote)
+        if err != nil {
+            // TODO: Do the right thing here (EOF vs Other)
+        }
+        promise <- Response{&v}
+    }
+}
+
+func handleFrontend(requests chan Request, remote FrontendConn) {
+    responses := make(chan Response)
+    go handleFrontendResponses(responses, remote)
     for {
-        v, err := redproxy.Read(from)
-        if err == io.EOF {
-            to.CloseWrite()
-        } else if err != nil {
-            to.Close()
-            return err
+        v, err := redproxy.Read(remote.TCPConn)
+        if err != nil {
+            // TODO: Do the right thing here (EOF vs Other)
+            return
         }
-        redproxy.Write(v, to)
-
-        if err == io.EOF {
-            return nil
-        }
+        requests <- Request{responses, &v}
     }
-    return nil
 }
 
-func handleWrite(local FrontendConn, remote BackendConn) {
-    // Handle Frontend to Backend communication
-    err := copyRedis(local.TCPConn, remote.TCPConn)
-    fmt.Println("io.Copy(local, remote) finished.")
-    if err != nil {
-        fmt.Println("Unclean finish:", err)
+func handleFrontendResponses(responses chan Response, remote FrontendConn) {
+    for response := range responses {
+        redproxy.Write(*response.value, remote.TCPConn)
     }
-    local.Close()
-}
-
-func handleRead(local FrontendConn, remote BackendConn) {
-    // Handle Backend to Frontend communication
-    err := copyRedis(remote.TCPConn, local.TCPConn)
-    fmt.Println("io.Copy(remote, local) finished.")
-    if err != nil {
-        fmt.Println("Unclean finish:", err)
-    }
-    remote.Close()
 }
 
 func handleConn(local *net.TCPConn) {
@@ -68,8 +76,10 @@ func handleConn(local *net.TCPConn) {
     fe_conn := FrontendConn{local}
     be_conn := BackendConn{remote.(*net.TCPConn)}
 
-    go handleWrite(fe_conn, be_conn)
-    go handleRead(fe_conn, be_conn)
+    requests := make(chan Request)
+
+    go handleBackend(requests, be_conn)
+    go handleFrontend(requests, fe_conn)
 }
 
 var port_str *string = flag.String("p", "9999", "local port")

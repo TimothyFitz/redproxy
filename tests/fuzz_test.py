@@ -5,7 +5,7 @@ from util import proxied_redis
 import random
 
 THREADS = 100
-REQUEST_COUNT = 1000
+REQUEST_COUNT = 100
 
 
 def thread_main():
@@ -19,12 +19,10 @@ def thread_main():
         lambda: conn.sadd("funk", random.randrange(100))
     ]
 
-
     for r in xrange(REQUEST_COUNT):
         random.choice(actions)()
 
 def main():
-
     threads = [threading.Thread(target=thread_main) for x in range(THREADS)]
 
     for thread in threads:

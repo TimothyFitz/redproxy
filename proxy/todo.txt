@@ -1,4 +1,14 @@
+fix goroutine / fd leaks
+
 multiplexing
+    handle EOFs correctly
+    handle connection errors correctly
+    store conn state (currently only db #?)
+
+performance:
+    add benchmarks
+    do a pass to remove needless object copying (pass redis values by pointer everywhere)
+
 pipelining (tests)
 edge case tests
 round robin backends
@@ -6,3 +16,10 @@ SYNC / RDB parsing
 sharding
 configuration / UI
 documentation
+auth support (clients)
+auth support (backends)
+
+write c10k test
+write rps benchmark
+
+reply streaming? (constant memory usage)

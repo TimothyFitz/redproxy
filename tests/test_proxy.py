@@ -12,7 +12,8 @@ import redis.exceptions
 from util import proxied_redis, unproxied_redis
 
 class TestLowLevelConnectionBehavior(unittest.TestCase):
-    def test_quit_command_causes_connection_to_be_closed(self):
+    """ These tests are no longer testing the correct behavior, now that fe:be aren't 1:1 """
+    def DISABLED_test_quit_command_causes_connection_to_be_closed(self):
         conn = redis.connection.Connection(port=9999, socket_timeout=3)
         conn.connect()
         conn.send_command('QUIT')
@@ -21,7 +22,7 @@ class TestLowLevelConnectionBehavior(unittest.TestCase):
         with self.assertRaisesRegexp(redis.exceptions.ConnectionError, "Socket closed on remote end"):
             conn.read_response()
 
-    def test_closing_connection_closes_other_side(self):
+    def DISABLED_test_closing_connection_closes_other_side(self):
         ARBITRARY_UNUSED_DB = '9'
         rc = unproxied_redis()
 
