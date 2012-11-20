@@ -4,3 +4,5 @@ edge case tests
 round robin backends
 SYNC / RDB parsing
 sharding
+configuration / UI
+documentation
