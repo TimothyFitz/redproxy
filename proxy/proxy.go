@@ -62,23 +62,11 @@ func handleFrontendResponses(responses chan Response, remote FrontendConn) {
     }
 }
 
-func handleConn(local *net.TCPConn) {
-    remote, err := net.Dial("tcp", *remote_addr)
-
+func handleConn(requests chan Request, local *net.TCPConn) {
     fmt.Println("New connection")
 
-    if remote == nil {
-        fmt.Printf("remote dial failed: %v\n", err)
-
-        return
-    }
-
     fe_conn := FrontendConn{local}
-    be_conn := BackendConn{remote.(*net.TCPConn)}
 
-    requests := make(chan Request)
-
-    go handleBackend(requests, be_conn)
     go handleFrontend(requests, fe_conn)
 }
 
@@ -100,11 +88,25 @@ func main() {
         panic(err)
     }
 
+    remote, err := net.Dial("tcp", *remote_addr)
+
+    if remote == nil {
+        fmt.Printf("remote dial failed: %v\n", err)
+
+        return
+    }
+
+    be_conn := BackendConn{remote.(*net.TCPConn)}
+
+    requests := make(chan Request)
+
+    go handleBackend(requests, be_conn)
+
     for {
         conn, err := listener.AcceptTCP()
         if err != nil {
             panic(err)
         }
-        go handleConn(conn)
+        go handleConn(requests, conn)
     }
 }
