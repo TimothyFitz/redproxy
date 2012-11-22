@@ -5,6 +5,7 @@ import (
     "fmt"
     "github.com/timothyfitz/redproxy"
     "net"
+    "runtime"
 )
 
 type FrontendConn struct {
@@ -78,6 +79,8 @@ var port_str *string = flag.String("p", "9999", "local port")
 var remote_addr *string = flag.String("r", "localhost:6379", "remote address")
 
 func main() {
+    runtime.GOMAXPROCS(runtime.NumCPU())
+
     flag.Parse()
 
     fmt.Printf("Listening on port %v\nProxying: %v\n\n", *port_str, *remote_addr)
