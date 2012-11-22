@@ -1,35 +1,54 @@
+import sys
 import time
 import threading
+
 
 from util import proxied_redis
 import random
 
-THREADS = 100
-REQUEST_COUNT = 100
+class Basic(object):
+    rounds = 1
+    threads = 100
+    request_count = 100
 
+    def thread_main(self):
+        conn = proxied_redis()
 
-def thread_main():
-    conn = proxied_redis()
+        actions = [
+            lambda: conn.set("foo", "bar"),
+            lambda: conn.get("foo"),
+            lambda: conn.incr("biz"),
+            lambda: conn.decr("biz"),
+            lambda: conn.sadd("funk", random.randrange(100))
+        ]
 
-    actions = [
-        lambda: conn.set("foo", "bar"),
-        lambda: conn.get("foo"),
-        lambda: conn.incr("biz"),
-        lambda: conn.decr("biz"),
-        lambda: conn.sadd("funk", random.randrange(100))
-    ]
+        for r in xrange(self.request_count):
+            random.choice(actions)()
 
-    for r in xrange(REQUEST_COUNT):
-        random.choice(actions)()
+class C1k(Basic):
+    threads = 1024
+    request_count = 10
+
+class FDLeak(Basic):
+    rounds = 100
+    threads = 100
+    request_count = 1
+
 
 def main():
-    threads = [threading.Thread(target=thread_main) for x in range(THREADS)]
+    if len(sys.argv) == 1:
+        program = Basic
+    else:
+        program = globals()[sys.argv[1]]
 
-    for thread in threads:
-        thread.start()
+    for round in range(program.rounds):
+        threads = [threading.Thread(target=program().thread_main) for x in range(program.threads)]
 
-    for thread in threads:
-        thread.join()
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
 
     print "Success!"
 

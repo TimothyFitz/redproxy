@@ -1,4 +1,4 @@
-fix goroutine / fd leaks
+enable multiprocess
 
 multiplexing
     handle EOFs correctly

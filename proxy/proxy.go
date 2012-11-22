@@ -45,7 +45,11 @@ func handleBackendResponses(promises chan chan<- Response, remote BackendConn) {
 
 func handleFrontend(requests chan Request, remote FrontendConn) {
     responses := make(chan Response)
+    defer close(responses)
+    defer remote.Close()
+
     go handleFrontendResponses(responses, remote)
+
     for {
         v, err := redproxy.Read(remote.TCPConn)
         if err != nil {
