@@ -55,6 +55,7 @@ func handleFrontend(requests chan Request, remote FrontendConn) {
         v, err := redproxy.Read(remote.TCPConn)
         if err != nil {
             // TODO: Do the right thing here (EOF vs Other)
+            fmt.Printf("Error while reading remote conn: %v", err)
             return
         }
         requests <- Request{responses, &v}

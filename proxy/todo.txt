@@ -2,13 +2,17 @@ multiplexing
     handle EOFs correctly
     handle connection errors correctly
     store conn state (currently only db #?)
+    handle out-of-order replies correctly
+
+support for old-style protocol
+    (fix for redis-benchmark)
 
 performance:
     add benchmarks
     do a pass to remove needless object copying (pass redis values by pointer everywhere)
 
 pipelining (tests)
-edge case tests
+more protocol edge case tests
 round robin backends
 SYNC / RDB parsing
 sharding
