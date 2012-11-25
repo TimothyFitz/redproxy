@@ -22,6 +22,40 @@ const (
     charInteger       = ':'
 )
 
+var bulkCommands = map[string]bool{
+    "zrevrank":  true,
+    "zrem":      true,
+    "echo":      true,
+    "config":    true,
+    "lset":      true,
+    "set":       true,
+    "setex":     true,
+    "append":    true,
+    "hsetnx":    true,
+    "publish":   true,
+    "sismember": true,
+    "lpush":     true,
+    "hmget":     true,
+    "hdel":      true,
+    "hexists":   true,
+    "rpush":     true,
+    "zscore":    true,
+    "setnx":     true,
+    "zadd":      true,
+    "hset":      true,
+    "hget":      true,
+    "zincrby":   true,
+    "mset":      true,
+    "smove":     true,
+    "hmset":     true,
+    "getset":    true,
+    "zrank":     true,
+    "sadd":      true,
+    "srem":      true,
+    "msetnx":    true,
+    "lrem":      true,
+}
+
 var crlf = []byte("\r\n")
 
 func itob(i int) []byte {
@@ -137,6 +171,20 @@ func readOrError(in *bufio.Reader, slice []byte) error {
     return nil
 }
 
+func expectCrlf(in *bufio.Reader) error {
+    expected_crlf := make([]byte, 2)
+    err := readOrError(in, expected_crlf)
+    if err != nil {
+        return err
+    }
+
+    if !bytes.Equal(expected_crlf, crlf) {
+        return newProtocolError(fmt.Sprintf("Expected crlf, got: %#v", expected_crlf))
+    }
+
+    return nil
+}
+
 func read(in *bufio.Reader) (interface{}, error) {
     header, err := in.ReadBytes('\n')
 
@@ -163,18 +211,12 @@ func read(in *bufio.Reader) (interface{}, error) {
         }
 
         data := make([]byte, length)
-        err = readOrError(in, data)
-        if err != nil {
-            return nil, err
-        }
-        expected_crlf := make([]byte, 2)
-        err = readOrError(in, expected_crlf)
-        if err != nil {
+        if err = readOrError(in, data); err != nil {
             return nil, err
         }
 
-        if !bytes.Equal(expected_crlf, crlf) {
-            return nil, newProtocolError(fmt.Sprintf("Expected crlf, got: %#v", expected_crlf))
+        if err = expectCrlf(in); err != nil {
+            return nil, err
         }
 
         return BulkData(data), nil
@@ -214,6 +256,32 @@ func read(in *bufio.Reader) (interface{}, error) {
             return nil, err
         }
         return Integer(value), nil
+    default:
+        words := bytes.Split(header[:len(header)-2], []byte{' '})
+        command := string(bytes.ToLower(words[0]))
+        if bulkCommands[command] {
+            blen, err := strconv.Atoi(string(words[len(words)-1]))
+            if err != nil {
+                return nil, err
+            }
+
+            data := make([]byte, blen)
+            if err = readOrError(in, data); err != nil {
+                return nil, err
+            }
+
+            if err = expectCrlf(in); err != nil {
+                return nil, err
+            }
+
+            words[len(words)-1] = data
+        }
+
+        mbr := make(MultiBulkData, len(words))
+        for i, word := range words {
+            mbr[i] = BulkData(word)
+        }
+        return mbr, nil
     }
     return nil, newProtocolError(fmt.Sprintf("Unknown reply type: %#v (%#v)", header, string(header)))
 }

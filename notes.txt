@@ -1,0 +1,28 @@
+Redis Connection State
+    - "Normal"
+        - Current db #
+        - Script running? (bool? conn?)
+        - preauth
+
+    - Watch/Transaction State
+        - Watched variables
+        - In-transaction (after MULTI)
+
+    - Subscription
+        - Which subscriptions
+        - Which pattern subscriptions
+    - SYNC
+        - SYNC issued
+        - PING replied to 
+          (connection direction flipped)
+
+
+Commands that need special casing:
+    PING
+    Everything here: http://redis.io/commands#server
+
+
+Edge Cases:
+    SCRIPT KILL
+    SUBSCRIBE
+    PSUBSCRIBE

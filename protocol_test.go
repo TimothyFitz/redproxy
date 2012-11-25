@@ -37,6 +37,23 @@ var expected_values = []expected_value{
     },
 }
 
+var old_protocol_expected_values = []expected_value{
+    {
+        MultiBulkData{
+            BulkData([]byte("PING")),
+        },
+        []byte("PING\r\n"),
+    },
+    {
+        MultiBulkData{
+            BulkData([]byte("SET")),
+            BulkData([]byte("foo")),
+            BulkData([]byte("barbar")),
+        },
+        []byte("SET foo 6\r\nbarbar\r\n"),
+    },
+}
+
 func encode(iv interface{}) []byte {
     var buff bytes.Buffer
     Write(iv, &buff)
@@ -80,8 +97,15 @@ func TestInequality(t *testing.T) {
     }
 }
 
+func concat(lhs, rhs []expected_value) []expected_value {
+    result := make([]expected_value, len(lhs)+len(rhs))
+    copy(result, lhs)
+    copy(result[len(lhs):], rhs)
+    return result
+}
+
 func TestDecodingKnownGoodValues(t *testing.T) {
-    for _, ev := range expected_values {
+    for _, ev := range concat(expected_values, old_protocol_expected_values) {
         value, err := Read(bytes.NewBuffer(ev.encoded))
         if err != nil {
             t.Fatalf("Unexpected error %#v", err)
