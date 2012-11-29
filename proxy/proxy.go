@@ -5,8 +5,13 @@ import (
     "fmt"
     "github.com/timothyfitz/redproxy"
     "net"
-    "runtime"
+    "bufio"
+    "log"
+    "io"
+    //"runtime"
 )
+
+const BUFFER_SIZE = 100
 
 type FrontendConn struct {
     *net.TCPConn
@@ -16,55 +21,86 @@ type BackendConn struct {
     *net.TCPConn
 }
 
+type Tag uint64
+
 type Response struct {
     value *interface{}
+    id Tag
+}
+
+type Promise struct {
+    promise chan<- Response
+    id Tag
 }
 
 type Request struct {
-    promise chan<- Response
-    value   *interface{}
+    Promise
+    value *interface{}
 }
 
 func handleBackend(requests chan Request, remote BackendConn) {
-    promises := make(chan chan<- Response)
+    promises := make(chan Promise, BUFFER_SIZE)
     go handleBackendResponses(promises, remote)
     for request := range requests {
-        promises <- request.promise
+        promises <- request.Promise
         redproxy.Write(*request.value, remote.TCPConn)
     }
 }
 
-func handleBackendResponses(promises chan chan<- Response, remote BackendConn) {
+func handleBackendResponses(promises <-chan Promise, remote BackendConn) {
+    in := bufio.NewReader(remote)
     for promise := range promises {
-        v, err := redproxy.Read(remote)
+        v, err := redproxy.Read(in)
         if err != nil {
             // TODO: Do the right thing here (EOF vs Other)
+            log.Panicln("BE_ERR:", err)
         }
-        promise <- Response{&v}
+        promise.promise <- Response{&v, promise.id}
     }
 }
 
 func handleFrontend(requests chan Request, remote FrontendConn) {
-    responses := make(chan Response)
+    request_id := Tag(1)
+    responses := make(chan Response, BUFFER_SIZE)
     defer close(responses)
     defer remote.Close()
 
     go handleFrontendResponses(responses, remote)
 
+    in := bufio.NewReader(remote)
+
     for {
-        v, err := redproxy.Read(remote.TCPConn)
+        v, err := redproxy.Read(in)
         if err != nil {
             // TODO: Do the right thing here (EOF vs Other)
-            fmt.Printf("Error while reading remote conn: %v", err)
+            if err == io.EOF {
+                fmt.Println("Connection closed.")
+            } else {
+                fmt.Printf("Error while reading remote conn: %v\n", err)
+            }
             return
         }
-        requests <- Request{responses, &v}
+
+        requests <- Request{Promise{responses, request_id}, &v}
+        request_id++
     }
 }
 
 func handleFrontendResponses(responses chan Response, remote FrontendConn) {
+    request_id := Tag(1)
+    queued_responses := make(map[Tag] Response)
     for response := range responses {
-        redproxy.Write(*response.value, remote.TCPConn)
+        queued_responses[response.id] = response
+
+        for {
+            response, ok := queued_responses[request_id]
+            if !ok {
+                break
+            }
+            delete(queued_responses, request_id)
+            redproxy.Write(*response.value, remote.TCPConn)
+            request_id++
+        }
     }
 }
 
@@ -80,7 +116,7 @@ var port_str *string = flag.String("p", "9999", "local port")
 var remote_addr *string = flag.String("r", "localhost:6379", "remote address")
 
 func main() {
-    runtime.GOMAXPROCS(runtime.NumCPU())
+    //runtime.GOMAXPROCS(runtime.NumCPU())
 
     flag.Parse()
 

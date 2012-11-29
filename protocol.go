@@ -6,6 +6,7 @@ import (
     "fmt"
     "io"
     "strconv"
+    "strings"
 )
 
 type MultiBulkData []BulkData
@@ -13,6 +14,30 @@ type BulkData []byte
 type SingleLine []byte
 type ErrorMessage []byte
 type Integer int64
+
+func (bd BulkData) String() string {
+    return fmt.Sprintf("BulkData(%s)", string(bd))
+}
+
+func (mbd MultiBulkData) String() string {
+    pieces := make([]string, len(mbd))
+    for i, piece := range mbd {
+        pieces[i] = piece.String()
+    }
+    return fmt.Sprintf("MultiBulkData[%s]", strings.Join(pieces, ", "))
+}
+
+func (sl SingleLine) String() string {
+    return fmt.Sprintf("SingleLine(%s)", string(sl))
+}
+
+func (em ErrorMessage) String() string {
+    return fmt.Sprintf("ErrorMessage(%s)", string(em))
+}
+
+func (i Integer) String() string {
+    return fmt.Sprintf("Integer(%d)", int64(i))
+}
 
 const (
     charMultyBulkData = '*'
@@ -185,7 +210,7 @@ func expectCrlf(in *bufio.Reader) error {
     return nil
 }
 
-func read(in *bufio.Reader) (interface{}, error) {
+func Read(in *bufio.Reader) (interface{}, error) {
     header, err := in.ReadBytes('\n')
 
     if err != nil {
@@ -228,7 +253,7 @@ func read(in *bufio.Reader) (interface{}, error) {
         }
         mbd := make(MultiBulkData, length)
         for i := 0; i < length; i++ {
-            v, err := read(in)
+            v, err := Read(in)
             if err != nil {
                 return nil, err
             }
@@ -284,9 +309,4 @@ func read(in *bufio.Reader) (interface{}, error) {
         return mbr, nil
     }
     return nil, newProtocolError(fmt.Sprintf("Unknown reply type: %#v (%#v)", header, string(header)))
-}
-
-func Read(in io.Reader) (v interface{}, err error) {
-    v, err = read(bufio.NewReader(in))
-    return
 }

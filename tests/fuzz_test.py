@@ -1,10 +1,14 @@
 import sys
 import time
 import threading
-
-
-from util import proxied_redis
 import random
+import string
+
+
+from util import proxied_redis, unproxied_redis
+import random
+
+rand_str = lambda length: "".join([random.choice(string.lowercase) for x in range(length)])
 
 class Basic(object):
     rounds = 1
@@ -34,6 +38,18 @@ class FDLeak(Basic):
     threads = 100
     request_count = 1
 
+class FindMisplacedReply(object):
+    rounds = 1
+    threads = 2
+    request_count = 1000
+
+    def thread_main(self):
+        value = rand_str(32)
+        conn = proxied_redis()
+        for x in xrange(self.request_count):
+            result = conn.echo(value)
+            if result != value:
+                raise Exception("actual(%s) != expected(%s)" % (result, value))
 
 def main():
     if len(sys.argv) == 1:

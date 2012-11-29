@@ -74,6 +74,20 @@ class TestProxy(unittest.TestCase):
         self.client.set("counter", 0)
         self.assertEqual(1, self.client.incr("counter"))
 
+    def test_sequence_of_commands(self):
+        self.client.set("counter", 0)
+        for x in range(1, 10):
+            self.assertEqual(x, self.client.incr("counter"))
+
+    def test_parallel_sequence_of_commands(self):
+        self.client.set("counter", 0)
+        self.client2 = proxied_redis()
+        for x in range(1, 20):
+            if x % 2:
+                self.assertEqual(x, self.client.incr("counter"))
+            else:
+                self.assertEqual(x, self.client.incr("counter"))
+
 def wait_for_true(fun, comment=None):
     start = time.time()
     while time.time() - start < 3:

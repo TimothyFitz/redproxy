@@ -1,6 +1,7 @@
 package redproxy
 
 import (
+    "bufio"
     "bytes"
     "testing"
 )
@@ -106,7 +107,7 @@ func concat(lhs, rhs []expected_value) []expected_value {
 
 func TestDecodingKnownGoodValues(t *testing.T) {
     for _, ev := range concat(expected_values, old_protocol_expected_values) {
-        value, err := Read(bytes.NewBuffer(ev.encoded))
+        value, err := Read(bufio.NewReader(bytes.NewBuffer(ev.encoded)))
         if err != nil {
             t.Fatalf("Unexpected error %#v", err)
         }

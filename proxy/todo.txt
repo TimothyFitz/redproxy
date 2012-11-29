@@ -3,6 +3,7 @@ multiplexing
     handle connection errors correctly
     store conn state (currently only db #?)
     handle out-of-order replies correctly
+        - handle closing channel as part of this
 
 support for old-style protocol
     (fix for redis-benchmark)
