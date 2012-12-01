@@ -1,16 +1,16 @@
-PING_INLINE: nanPING_INLINE: 41666.67 requests per second
-PING_BULK: 38461.54 requests per second
-SET: 47619.05 requests per second
-GET: 50000.00 requests per second
-INCR: 45454.55 requests per second
-LPUSH: 45454.55 requests per second
+PING_INLINE: nanPING_INLINE: 34482.76 requests per second
+PING_BULK: 50000.00 requests per second
+SET: 50000.00 requests per second
+GET: 31250.00 requests per second
+INCR: 47619.05 requests per second
+LPUSH: 52631.58 requests per second
 LPOP: 52631.58 requests per second
-SADD: 50000.00 requests per second
+SADD: 52631.58 requests per second
 SPOP: 55555.56 requests per second
-LPUSH (needed to benchmark LRANGE): 50000.00 requests per second
-LRANGE_100 (first 100 elements): 18294.12LRANGE_100 (first 100 elements): 19607.84 requests per second
-LRANGE_300 (first 300 elements): 7812.50 requests per second
-LRANGE_500 (first 450 elements): 5538.46LRANGE_500 (first 450 elements): 5263.16 requests per second
-LRANGE_600 (first 600 elements): 4288.34LRANGE_600 (first 600 elements): 4149.38 requests per second
-MSET (10 keys): 27027.03 requests per second
+LPUSH (needed to benchmark LRANGE): 52631.58 requests per second
+LRANGE_100 (first 100 elements): 15900.00LRANGE_100 (first 100 elements): 16129.03 requests per second
+LRANGE_300 (first 300 elements): 7407.41 requests per second
+LRANGE_500 (first 450 elements): 5914.63LRANGE_500 (first 450 elements): 5813.95 requests per second
+LRANGE_600 (first 600 elements): 4525.00LRANGE_600 (first 600 elements): 4424.78 requests per second
+MSET (10 keys): 30303.03 requests per second
 
