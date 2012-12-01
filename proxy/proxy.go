@@ -40,10 +40,12 @@ type Request struct {
 
 func handleBackend(requests chan Request, remote BackendConn) {
     promises := make(chan Promise, BUFFER_SIZE)
+    output := bufio.NewWriter(remote.TCPConn)
     go handleBackendResponses(promises, remote)
     for request := range requests {
         promises <- request.Promise
-        redproxy.Write(*request.value, remote.TCPConn)
+        redproxy.Write(*request.value, output)
+        output.Flush()
     }
 }
 
@@ -89,6 +91,7 @@ func handleFrontend(requests chan Request, remote FrontendConn) {
 func handleFrontendResponses(responses chan Response, remote FrontendConn) {
     request_id := Tag(1)
     queued_responses := make(map[Tag] Response)
+    output := bufio.NewWriter(remote)
     for response := range responses {
         queued_responses[response.id] = response
 
@@ -98,7 +101,8 @@ func handleFrontendResponses(responses chan Response, remote FrontendConn) {
                 break
             }
             delete(queued_responses, request_id)
-            redproxy.Write(*response.value, remote.TCPConn)
+            redproxy.Write(*response.value, output)
+            output.Flush()
             request_id++
         }
     }

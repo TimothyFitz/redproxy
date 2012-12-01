@@ -4,7 +4,6 @@ import (
     "bufio"
     "bytes"
     "fmt"
-    "io"
     "strconv"
     "strings"
 )
@@ -136,7 +135,7 @@ func Equal(i_lhs interface{}, i_rhs interface{}) bool {
     return false
 }
 
-func Write(iv interface{}, out io.Writer) {
+func Write(iv interface{}, out *bufio.Writer) {
     switch v := iv.(type) {
     case MultiBulkData:
         out.Write([]byte{charMultyBulkData})

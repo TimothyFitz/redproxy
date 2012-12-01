@@ -57,7 +57,9 @@ var old_protocol_expected_values = []expected_value{
 
 func encode(iv interface{}) []byte {
     var buff bytes.Buffer
-    Write(iv, &buff)
+    output := bufio.NewWriter(&buff)
+    Write(iv, output)
+    output.Flush()
     return buff.Bytes()
 }
 
