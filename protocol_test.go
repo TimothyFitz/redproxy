@@ -116,3 +116,14 @@ func TestDecodingKnownGoodValues(t *testing.T) {
         }
     }
 }
+
+func BenchmarkDecodingSmallBulkData(b *testing.B) {
+    b.StopTimer()
+    piece := encode(BulkData([]byte("xxx")))
+    data := bytes.Repeat(piece, b.N)
+    input := bufio.NewReader(bytes.NewBuffer(data))
+    b.StartTimer()
+    for i := 0; i < b.N; i++ {
+        Read(input)
+    }
+}
