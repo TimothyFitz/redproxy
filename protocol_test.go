@@ -126,6 +126,9 @@ func BenchmarkDecodingSmallBulkData(b *testing.B) {
     input := bufio.NewReader(bytes.NewBuffer(data))
     b.StartTimer()
     for i := 0; i < b.N; i++ {
-        Read(input)
+        _, err := Read(input)
+        if err != nil {
+            b.Fatal("Unexpected error:", err)
+        }
     }
 }

@@ -1,2 +1,4 @@
 *.pyc
 dump.rdb
+*.test
+*.prof

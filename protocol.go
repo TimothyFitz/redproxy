@@ -216,8 +216,8 @@ func Read(in *bufio.Reader) (interface{}, error) {
         return nil, err
     }
 
-    if header[len(header)-1] != '\r' {
-        err = newProtocolError(fmt.Sprintf("Invalid reply: %#v", header))
+    if header[len(header)-2] != '\r' {
+        return nil, newProtocolError(fmt.Sprintf("Invalid reply: %#v", header))
     }
 
     msg_type := header[0]
@@ -258,7 +258,7 @@ func Read(in *bufio.Reader) (interface{}, error) {
             }
             br, ok := v.(BulkData)
             if !ok {
-                err = newProtocolError(fmt.Sprintf("Unexpected non-bulk reply: %#v", v))
+                return nil, newProtocolError(fmt.Sprintf("Unexpected non-bulk reply: %#v", v))
             }
             mbd[i] = br
         }
